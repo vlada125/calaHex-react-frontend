@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Typography, Grid, Button, TextField, FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
 import validate from 'validate.js';
-import clsx from 'clsx';
-import { Link } from 'react-router-dom';
+import { withRouter } from 'react-router';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -12,20 +12,7 @@ const useStyles = makeStyles(theme => ({
     boxShadow: '1px 1px 8px 4px #5855551e'
   },
   font13: {
-    fontSize: 13,
-    color: theme.palette.primary.main
-  },
-  right: {
-    textAlign: 'right',
-  },
-  nonDecoration: {
-    textDecoration: 'none'
-  },
-  center: {
-    textAlign: 'center'
-  },
-  robot: {
-
+    fontSize: 12
   }
 }));
 
@@ -43,9 +30,13 @@ const schema = {
       minimum: 8,
     },
   },
+  password_confirmation: {
+    presence: { allowEmpty: false, message: 'is required' },
+    equality: "password",
+  },
 };
 
-const Form = () => {
+const Form = (props) => {
   const classes = useStyles();
 
   const [formState, setFormState] = React.useState({
@@ -54,7 +45,7 @@ const Form = () => {
     touched: {},
     errors: {},
   });
-
+  const [captcha, setCaptcha] = React.useState(false);
   React.useEffect(() => {
     const errors = validate(formState.values, schema);
 
@@ -64,6 +55,19 @@ const Form = () => {
       errors: errors || {},
     }));
   }, [formState.values]);
+
+  React.useEffect(() => {
+    if(props.error) {
+      setFormState(formState => ({
+        ...formState,
+        errors: props.error
+      }));
+    }
+  }, [props.error]);
+
+  // useEffect(() => {
+  //   props.GetNews();
+  // }, [])
 
   const handleChange = event => {
     event.persist();
@@ -88,7 +92,7 @@ const Form = () => {
     event.preventDefault();
 
     if (formState.isValid) {
-      window.location.replace('/');
+      props.onSubmit(formState.values, props.history);
     }
 
     setFormState(formState => ({
@@ -98,6 +102,10 @@ const Form = () => {
         ...formState.errors,
       },
     }));
+  };
+
+  const onHandleRecaptcha = (value) => {
+    setCaptcha(value);
   };
 
   const hasError = field =>
@@ -111,7 +119,8 @@ const Form = () => {
           <Grid item xs={12}>
             <TextField
               placeholder="E-mail"
-              label="E-mail *"
+              // label="E-mail *"
+              className={classes.font13}
               variant="outlined"
               size="small"
               name="email"
@@ -126,7 +135,8 @@ const Form = () => {
           <Grid item xs={12}>
             <TextField
               placeholder="Password"
-              label="Password *"
+              // label="Password *"
+              className={classes.font13}
               variant="outlined"
               size="small"
               name="password"
@@ -140,8 +150,56 @@ const Form = () => {
               value={formState.values.password || ''}
             />
           </Grid>
-          <Grid item xs={12} className={classes.right}>
-            <Link to="/forget" className={clsx(classes.font13, classes.nonDecoration)}>Forgot password?</Link>
+          <Grid item xs={12}>
+            <TextField
+              placeholder="Confirm Password"
+              // label="Confirm Password *"
+              className={classes.font13}
+              variant="outlined"
+              size="small"
+              name="password_confirmation"
+              fullWidth
+              helperText={
+                hasError('password_confirmation') ? formState.errors.password_confirmation[0] : null
+              }
+              error={hasError('password_confirmation')}
+              onChange={handleChange}
+              type="password"
+              value={formState.values.password_confirmation || ''}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              placeholder="Refferal Code"
+              // label="Refferal Code *"
+              className={classes.font13}
+              variant="outlined"
+              size="small"
+              name="refferalCode"
+              fullWidth
+              helperText={
+                hasError('refferalCode') ? formState.errors.refferalCode[0] : null
+              }
+              error={hasError('refferalCode')}
+              onChange={handleChange}
+              type="text"
+              value={formState.values.refferalCode || ''}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" className={classes.font13}>
+              If you were invited by a friend, enter his/her code here. You will not be able to apply a refferal code once your account has been created.
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <FormGroup row>
+              <ReCAPTCHA
+                // ref={recaptchaRef}
+                // size="invisible"
+                sitekey="6LeKxQwaAAAAAGPOpMltsXMf5Jv5s8_iuIPgn7jA"
+                onChange={onHandleRecaptcha}
+              />
+            </FormGroup>
           </Grid>
           <Grid item xs={12}>
             <FormGroup row>
@@ -154,8 +212,7 @@ const Form = () => {
                     color="primary"
                   />
                 }
-                label={<span className={classes.font13}>I'm not a bot</span>}
-                className={classes.robot}
+                label={<span className={classes.font13}>Agree on Privacy and Cookie policy</span>}
               />
             </FormGroup>
           </Grid>
@@ -166,12 +223,10 @@ const Form = () => {
               type="submit"
               color="primary"
               fullWidth
+              disabled={!captcha}
             >
-              Log In
+              Sign Up
             </Button>
-          </Grid>
-          <Grid item xs={12} className={classes.center}>
-            <Link to="sign-up" className={clsx(classes.font13, classes.nonDecoration)}>Don't you have an account? Sign Up</Link>
           </Grid>
         </Grid>
       </form>
@@ -179,4 +234,4 @@ const Form = () => {
   );
 };
 
-export default Form;
+export default withRouter(Form);

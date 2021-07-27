@@ -1,4 +1,7 @@
 import { createMuiTheme, responsiveFontSizes } from "@material-ui/core";
+import * as locale from '@material-ui/core/locale';
+
+import { DefaultLocale } from '../static/constants';
 
 // colors
 const primary = "#337ab7";
@@ -67,6 +70,6 @@ const theme = createMuiTheme({
     typography: {
         useNextVariants: true
     }
-});
+}, locale[DefaultLocale]);
 
 export default responsiveFontSizes(theme);

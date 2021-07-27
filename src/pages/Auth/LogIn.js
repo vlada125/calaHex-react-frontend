@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import clsx from 'clsx';  
 import { 
-  Grid
+  Grid,
+  Hidden
 } from '@material-ui/core';
-import ArrowForwardIos from '@material-ui/icons/ArrowForwardIos';
-import LoginForm  from './components/LoginForm';
+import LoginForm  from '../../components/Auth/LoginForm';
+import ControlledAccordions from '../../components/Auth/ControlledAccordions';
 import logoImg from "../../assets/logo.png";
+import clsx from 'clsx';
+import {GetNews} from '../../redux/actions/other'
+import { connect } from 'react-redux';
+
+// import jsonData from "../../resources/auth.json";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -20,7 +25,9 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     minHeight: `calc(100vh - ${theme.mixins.toolbar['@media (min-width:600px)'].minHeight}px)`,
     maxWidth: 350,
-    //margin: `0 50px`,
+    [theme.breakpoints.down("sm")]: {
+      maxWidth: '100%'
+    },
   },
   title: {
     marginBottom: 20,
@@ -30,51 +37,63 @@ const useStyles = makeStyles(theme => ({
   },
   sider: {
     background: theme.palette.primary.main,
-    minHeight: `calc(100vh - ${theme.mixins.toolbar['@media (min-width:600px)'].minHeight}px + 15px)`,
+    minHeight: `calc(100vh - ${theme.mixins.toolbar['@media (min-width:600px)'].minHeight}px + 64px)`,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: '25%',
     flexDirection: 'column',
-    color: 'white'
-  },
-  siderlist: {
-    fontSize: 12,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '80%'
+    color: 'white',
+    [theme.breakpoints.up("md")]: {
+      paddingTop: '10%'
+    },
+    [theme.breakpoints.down("xs")]: {
+      paddingTop: '10%',
+      paddingRight: 5,
+      paddingLeft: 5
+    },
   },
   siderTitle: {
     color: 'white',
-    fontWeight: 400
+    fontWeight: 400,
   },
   logoImg: {
     marginBottom: theme.spacing(2)
   },
-  font11: {
-    fontSize: 11
-  }, 
-  marginBottom50: {
-    marginBottom: 80
+  center: {
+    textAlign: 'center',
+    marginTop: 100,
   }
 }));
 
-const Login = () => {
+const Login = (props) => {
   const classes = useStyles();
+  // const { accordions } = jsonData;
+  const { news, GetNews } = props;
+
+  useEffect(() => {
+    GetNews();
+  }, [])
 
   return (
     <div className={classes.root}>
-        <Grid container space={10}>
-          <Grid item xs={3} className={classes.sider}>
-            <h2 className={classes.siderTitle}>Calahex News</h2>
-            <p className={classes.siderlist}><span>Wrapped Bitcoin is now listed on Calahex </span> <ArrowForwardIos className={classes.font11}/></p>
-            <p className={classes.siderlist}><span>SPARK Airdrop support for XRP Holders </span> <ArrowForwardIos className={classes.font11}/></p>
-            <p className={clsx(classes.siderlist, classes.marginBottom50)}><span>Hegic and zLOT are now listed on Calahex </span> <ArrowForwardIos className={classes.font11}/></p>
+        <Grid container space={1}>
+          <Hidden xsDown>
+          <Grid item md={3} xs={4} className={classes.sider}>
+            <h2 className={clsx(classes.siderTitle, classes.center)}>Calahex News</h2>
+            {
+                Object.keys(news).map((key, index) => {
+                  return (
+                      <ControlledAccordions key={index} keyword={`panel${index+1}`}  title={key} subitems={news[key].map(_new => ({text: _new}))} />
+                  )
+                })
+              }
           </Grid>
-          <Grid item md={2} sm={1}></Grid>
-          <Grid item xs={7}>
+
+          </Hidden>
+          <Grid item md={2} sm={1} xs={1}/>
+          <Grid item xs={10} sm={6} md={6}>
             <div className={classes.formContainer}>
-              <img src={logoImg} className={classes.logoImg} />
+              <img src={logoImg} className={classes.logoImg} alt="logo" />
               <LoginForm />
             </div>
           </Grid>
@@ -83,4 +102,12 @@ const Login = () => {
   );
 };
 
-export default Login;
+const mapStateToProps = state => ({
+  news: state.other.news
+});
+
+const mapDispatchToProps = {
+  GetNews
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

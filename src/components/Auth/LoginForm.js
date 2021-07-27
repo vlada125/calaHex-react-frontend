@@ -1,7 +1,13 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Typography, Grid, Button, TextField, FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
+import { Grid, Button, TextField, FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
 import validate from 'validate.js';
+import ReCAPTCHA from "react-google-recaptcha";
+import clsx from 'clsx';
+import { Link, withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
+
+import {SigninUser} from '../../redux/actions/auth';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -10,7 +16,20 @@ const useStyles = makeStyles(theme => ({
     boxShadow: '1px 1px 8px 4px #5855551e'
   },
   font13: {
-    fontSize: 13
+    fontSize: 13,
+    color: theme.palette.primary.main
+  },
+  right: {
+    textAlign: 'right',
+  },
+  nonDecoration: {
+    textDecoration: 'none'
+  },
+  center: {
+    textAlign: 'center'
+  },
+  robot: {
+
   }
 }));
 
@@ -28,21 +47,9 @@ const schema = {
       minimum: 8,
     },
   },
-  confirmPassword: {
-    presence: { allowEmpty: false, message: 'is required' },
-    length: {
-      minimum: 8,
-    },
-  },
-  refferalCode: {
-    presence: { allowEmpty: false, message: 'is required' },
-    length: {
-      minimum: 8,
-    },
-  },
 };
 
-const Form = () => {
+const Form = (props) => {
   const classes = useStyles();
 
   const [formState, setFormState] = React.useState({
@@ -51,6 +58,8 @@ const Form = () => {
     touched: {},
     errors: {},
   });
+
+  const [captcha, setCaptcha] = React.useState(false);
 
   React.useEffect(() => {
     const errors = validate(formState.values, schema);
@@ -61,6 +70,18 @@ const Form = () => {
       errors: errors || {},
     }));
   }, [formState.values]);
+
+  React.useEffect(() => {
+    if(props.error) {
+      setFormState({
+        ...formState,
+        errors: {
+          email: [props.error.message],
+          password: [props.error.message]
+        }
+      });
+    }
+  }, [props.error])
 
   const handleChange = event => {
     event.persist();
@@ -81,11 +102,17 @@ const Form = () => {
     }));
   };
 
+  const onHandleRecaptcha = (value) => {
+    console.log('captcha', value);
+    setCaptcha(value);
+  };
+
   const handleSubmit = event => {
     event.preventDefault();
 
     if (formState.isValid) {
-      window.location.replace('/');
+      // window.location.replace('/');
+      props.SigninUser(formState.values, props.history);
     }
 
     setFormState(formState => ({
@@ -108,7 +135,7 @@ const Form = () => {
           <Grid item xs={12}>
             <TextField
               placeholder="E-mail"
-              label="E-mail *"
+              // label="E-mail *"
               variant="outlined"
               size="small"
               name="email"
@@ -123,7 +150,7 @@ const Form = () => {
           <Grid item xs={12}>
             <TextField
               placeholder="Password"
-              label="Password *"
+              // label="Password *"
               variant="outlined"
               size="small"
               name="password"
@@ -137,73 +164,17 @@ const Form = () => {
               value={formState.values.password || ''}
             />
           </Grid>
-          <Grid item xs={12}>
-            <TextField
-              placeholder="Confirm Password"
-              label="Confirm Password *"
-              variant="outlined"
-              size="small"
-              name="confirmPassword"
-              fullWidth
-              helperText={
-                hasError('confirmPassword') ? formState.errors.confirmPassword[0] : null
-              }
-              error={hasError('confirmPassword')}
-              onChange={handleChange}
-              type="password"
-              value={formState.values.confirmPassword || ''}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              placeholder="Refferal Code"
-              label="Refferal Code *"
-              variant="outlined"
-              size="small"
-              name="refferalCode"
-              fullWidth
-              helperText={
-                hasError('refferalCode') ? formState.errors.refferalCode[0] : null
-              }
-              error={hasError('refferalCode')}
-              onChange={handleChange}
-              type="text"
-              value={formState.values.refferalCode || ''}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" className={classes.font13}>
-              If you were invited by a friend, enter their code here. You will not be able to apply a refferal code once your account has been created.
-            </Typography>
+          <Grid item xs={12} className={classes.right}>
+            <Link to="/forget" className={clsx(classes.font13, classes.nonDecoration)}>Forgot password?</Link>
           </Grid>
           <Grid item xs={12}>
             <FormGroup row>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    //checked={state.checkedB}
-                    onChange={handleChange}
-                    name="checkedB"
-                    color="primary"
-                  />
-                }
-                label={<span className={classes.font13}>I'm not a bot</span>}
-              />
-            </FormGroup>
-          </Grid>
-          <Grid item xs={12}>
-            <FormGroup row>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    //checked={state.checkedB}
-                    onChange={handleChange}
-                    name="checkedB"
-                    color="primary"
-                  />
-                }
-                label={<span className={classes.font13}>Agree on Privacy and Cookie policy</span>}
-              />
+            <ReCAPTCHA
+              // ref={recaptchaRef}
+              // size="invisible"
+              sitekey="6LeKxQwaAAAAAGPOpMltsXMf5Jv5s8_iuIPgn7jA"
+              onChange={onHandleRecaptcha}
+            />
             </FormGroup>
           </Grid>
           <Grid item xs={12}>
@@ -213,9 +184,13 @@ const Form = () => {
               type="submit"
               color="primary"
               fullWidth
+              disabled={!captcha}
             >
-              Sign Up
+              Log In
             </Button>
+          </Grid>
+          <Grid item xs={12} className={classes.center}>
+            <Link to="sign-up" className={clsx(classes.font13, classes.nonDecoration)}>Don't you have an account? Sign Up</Link>
           </Grid>
         </Grid>
       </form>
@@ -223,4 +198,14 @@ const Form = () => {
   );
 };
 
-export default Form;
+const mapStateToProps = state => ({
+  isAuthenticated: state.auth.isAuthenticated,
+  access_token: state.auth.access_token,
+  error: state.auth.error
+});
+
+const mapDispatchToProps = {
+  SigninUser
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Form));

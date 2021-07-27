@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import {
@@ -12,26 +12,61 @@ import {
     Typography,
     withWidth,
     isWidthUp,
-    Toolbar
+    Button,
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
+import clsx from "clsx";
+import { LanguageContext } from '../../utils/Language';
 
 const styles = theme => ({
     closeIcon: {
         marginRight: theme.spacing(0)
     },
+    white: {
+        color: 'white'
+    },
     headSection: {
-        width: 200
+        backgroundColor: theme.palette.primary.main,
+        width: '100vw'
+    },
+    headShow: {
+        marginTop: 160,
+        zIndex: 0,
     },
     blackList: {
         backgroundColor: theme.palette.primary.main,
-        height: "100%"
+        // height: "110vh"
     },
     noDecoration: {
         textDecoration: "none !important"
     },
+    signup: {
+        borderRadius: 20,
+        margin: 10,
+        textTransform: 'none',
+        textDecoration: "none !important",
+        border: `1px solid white`,
+        marginBottom: 50
+    },
+    login: {
+        borderRadius: 20,
+        margin: 10,
+        border: `1px solid white`,
+        background: 'white',
+        textTransform: 'none',
+        color: theme.palette.primary.main,
+        textDecoration: "none !important",
+        marginBottom: 50
+    },
     listText: {
-        textAlign: 'cetner'
+        textAlign: 'cetner',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+    },
+    borderTop: {
+        borderTop: '1px solid rgba(0, 0, 0, 0.1)'
+    },
+    width100: {
+        width: '100%'
     }
 });
 
@@ -47,6 +82,8 @@ function NavigationDrawer(props) {
         theme
     } = props;
 
+    const { dictionary } = useContext(LanguageContext);
+
     useEffect(() => {
         window.onresize = () => {
             if (isWidthUp("sm", width) && open) {
@@ -56,7 +93,7 @@ function NavigationDrawer(props) {
     }, [width, open, onClose]);
 
     return (
-        <Drawer variant="temporary" open={open} onClose={onClose} anchor={anchor}>
+        <Drawer variant="temporary" className={classes.headerShow} open={open} onClose={onClose} anchor={anchor}>
             <List className={classes.headSection}>
                 <ListItem
                     style={{
@@ -69,13 +106,13 @@ function NavigationDrawer(props) {
                 >
                     <ListItemIcon className={classes.closeIcon}>
                         <IconButton onClick={onClose} aria-label="Close Navigation">
-                            <CloseIcon color="primary" fontSize='small'/>
+                            <CloseIcon className={classes.white} fontSize='small' />
                         </IconButton>
                     </ListItemIcon>
                 </ListItem>
             </List>
             <List className={classes.blackList}>
-                {menuItems.map(element => {
+                {menuItems.map((element, i) => {
                     if (element.link) {
                         return (
                             <ListItem
@@ -86,13 +123,14 @@ function NavigationDrawer(props) {
                                  * with primary and secondary color
                                  */
                                 key={element.name}
-                                className={classes.listText}
+                                className={clsx(classes.listText, (i === 0) && classes.borderTop)}
                                 disableRipple
                                 disableTouchRipple
+                                onClick={onClose}
                             >
-                                <Link       
+                                <Link
                                     to={element.link}
-                                    className={classes.noDecoration}
+                                    className={clsx(classes.noDecoration, classes.width100)}
                                     onClick={onClose}
                                 >
                                     {element.icon ? (<ListItemIcon>{element.icon}</ListItemIcon>) : ''}
@@ -120,6 +158,28 @@ function NavigationDrawer(props) {
                         </ListItem>
                     );
                 })}
+                <ListItem>
+                    <Link to="sign-up" className={classes.noDecoration} onClick={onClose}>
+                        <Button
+                            color="primary"
+                            variant="contained"
+                            size="large"
+                            className={classes.signup}
+                        >
+                            {dictionary.signup}
+                        </Button>
+                    </Link>
+                    <Link to="login" className={classes.noDecoration} onClick={onClose}>
+                        <Button
+                            color="default"
+                            variant="contained"
+                            size="large"
+                            className={classes.login}
+                        >
+                            {dictionary.login}
+                        </Button>
+                    </Link>
+                </ListItem>
             </List>
         </Drawer>
     );

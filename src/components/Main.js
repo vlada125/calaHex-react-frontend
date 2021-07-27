@@ -1,11 +1,11 @@
-import React, { memo, useState, useEffect, useCallback } from "react";
+import React, { memo, useState, useCallback, useRef, useEffect } from "react";
 import { withRouter } from 'react-router-dom';
 import PropTypes from "prop-types";
 import AOS from "aos/dist/aos";
 import { withStyles } from "@material-ui/core";
 
-import Navbar from "./Navbar";
-import Footer from "./Footer";
+import Navbar from "./Layouts/Navbar";
+import Footer from "./Layouts/Footer";
 import "aos/dist/aos.css";
 import Routing from "./Routes";
 
@@ -37,8 +37,14 @@ function Main(props) {
         setSelectedTab("Landing");
     }, [setSelectedTab]);
 
+    const scrollTop = useRef(null);
+
+  useEffect(() => {
+    scrollTop.current.scrollIntoView({block: "start", behavior: "smooth"});
+  }, [props.location.pathname])
+
     return (
-        <div className={classes.wrapper}>
+        <div className={classes.wrapper} ref={scrollTop}>
             <Navbar
                 selectedTab={selectedTab}
                 selectTab={setSelectedTab}
